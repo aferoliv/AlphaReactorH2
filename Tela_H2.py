@@ -5,7 +5,7 @@ import os
 # biblioteca interface com usuário
 import tkinter as tk
 from tkinter import ttk
-from tkinter.messagebox import showinfo
+from tkinter.messagebox import showinfo,askokcancel
 from tkinter import filedialog
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,8 +43,8 @@ class Tela(ttk.Frame):
         self.texto3 = tk.Label(self.caixa1,text='')  #
         self.texto3.grid(column=0, row=7)
 
-        self.nome = tk.Entry(self.caixa1)
-        self.nome.grid(column=1, row=3)
+        self.entradas()
+
         self.botaoSair = tk.Button(self.caixa1, text='     Sair    ', command=master.destroy)
         self.botaoSair.grid(column=3, row=6)
         self.botaoLeitura = tk.Button(self.caixa1, text='  Obter Dados   ', command=self.leitura)
@@ -54,6 +54,9 @@ class Tela(ttk.Frame):
         #
         self.master.mainloop()
         #
+    def entradas(self):
+        self.nome = tk.Entry(self.caixa1)
+        self.nome.grid(column=1, row=3)
 
     def diretorio(self):
         # Allow user to select a directory and store it in global var
@@ -91,10 +94,16 @@ class Tela(ttk.Frame):
         df = pd.DataFrame(saida_dado)
         df.rename(columns={0: 'tempo', 1: 'temperatura', 2: 'pressao', 3: 'H2'}, inplace=True)
         df.to_excel(f"{nome_arquivo}.xlsx")
+        print("diretorio onde está salvando",sourcePath)
 
         arquivo.close()
         Tela.texto1 = tk.Label(self.caixa1, text='-------COLETA REALIZADA---------')
         Tela.texto1.grid(column=2, row=4)
+
+    def interrompendo(self):
+        print("aqui")
+        print("-----coleta finalizada-----")
+        arduino.close()
 
     def leitura(self):
         #
@@ -103,6 +112,7 @@ class Tela(ttk.Frame):
         #print(Path.cwd())
         if (Path(nome_completo).exists() and nome_arquivo != ''):
             showinfo("ATENÇÃO", "Esse nome já existe!!")
+            return
             #print("EPA")
         #
         # avalia erros associados ao nome do arquivo
