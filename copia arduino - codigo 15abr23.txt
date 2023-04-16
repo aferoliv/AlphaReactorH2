@@ -1,0 +1,160 @@
+/*
+  Reator contínuo de Bancada para produção de hidrogênio verde
+*/
+/*inclusão das bibliotecas necessárias*/
+// biblioteca para sensor temperatura DS18B20
+#include <OneWire.h>  
+#include <DallasTemperature.h>
+//biblioteca para sensor pressão (conversor AD TM7711)
+#include "HX711.h"    
+/********************************************************************/
+//pinos para o sensor de pressão
+#define DOUT  2   
+#define CLK  3 
+/*---------------------*/
+// pinos para o sensor de temperatura
+#define dados 4 /*o pino de dados do sensor está ligado na porta 4 do Arduino*/
+OneWire oneWire(dados);  /*Protocolo OneWire*/
+DallasTemperature sensors(&oneWire); /*encaminha referências OneWire para o sensor*/
+/*---------------------*/
+// pinos para o sensor de temperatura
+HX711 scale;
+float calibration_factor = -100000; //Change this for calibration your load cell
+int sensorPa = analogRead(A1);
+#define MQ_analog A2
+#define MQ_dig 7
+/********************************************************************/ 
+
+// These constants won't change. They're used to give names to the pins used:
+const int Beep = 7;    // aciona o beep
+const int Liga = 8;    // liga desliga o sistema
+const int PumpA = 9;   // bomba de borohidreto
+const int PumpB = 10;   // bomba de descarte
+const int SolC=11;      // solenoide - caso a bomba tenha retroalimentação
+const int NivelD = 12;  // nível de alerta superior no reator
+const int NivelE = 13;  // nível de alerta de mínimo no reservatório do borohidreto
+//
+const int H2 = A0;        // Pino do sensor de hidrogênio
+const int Temp = A1;      // Pino do sensor de temperatura
+const int Pressao = A2;   // Pino do sensor de pressão
+const int Vazao = A3;     // Pino do sensor de vazao
+//
+int H2Val = 0;          // value read from the pino A0
+int TempVal = 0;        // value read from the pino A1
+int PressaoVal = 0;     // value read from the pino A2
+int VazaoVal = 0;       //  value read from the pino A3
+
+int LigaVal=0;
+int PumpAVal=0;
+int PumpBVal=0;
+int SolCVal=0;
+int NivelDVal=0;
+int NivelEVal=0;
+int BeepVal=0;
+int continuo=0; //flag para manter o sistema funcionando. continuo =-1, interrompe; continuo =1 inicia e mantem 
+float temp=0;
+int a=0;
+//
+int tempo=2000;                // tempo de funcionamento da bomba de descarte antes de desligar 
+
+// Declaração da função Sensores
+void sensores()
+{
+  //Requerimento de temperatura
+        sensors.requestTemperatures(); /* Envia o comando para leitura da temperatura */
+  /* sensor pressão */
+        scale.set_scale(calibration_factor); //Adjust to this calibration factor
+        
+  /* h2*/
+    
+     Serial.print(sensors.getTempCByIndex(0));                        /* Sensor Temperatura */
+     Serial.print("b'");//Serial.print("\t");
+     Serial.print(scale.get_units()/1+0, 4);                          /* Sensor pressão */
+     Serial.print("b'");//Serial.print("\t");
+     //Serial.print(digitalRead(MQ_dig));                               /* Sensor presença H2*/
+     //Serial.print("\t");
+     Serial.println(analogRead(MQ_analog));                           /* Sensor H2*/ 
+
+
+
+
+ 
+}
+
+void setup() {
+  // define o modo de cada canal digital
+  pinMode(Liga, INPUT);
+  pinMode(PumpA, OUTPUT);
+  pinMode(PumpB, OUTPUT);
+  pinMode(SolC, OUTPUT);
+  pinMode(NivelD, INPUT);
+  pinMode(NivelE, INPUT);
+  pinMode(Beep, OUTPUT);
+  // initialize serial communications at 9600 bps:
+  digitalWrite(PumpA, LOW);
+  digitalWrite(PumpB, LOW);
+  //
+  pinMode(MQ_analog, INPUT);
+  pinMode(MQ_dig, INPUT);
+  //
+  scale.begin(DOUT, CLK);
+  scale.set_scale();
+  scale.tare(); //Reset the scale to 0
+  
+  long zero_factor = scale.read_average(); //Get a baseline reading
+  //
+
+  
+  //Serial.println("Temperatura /°C           Pressão /kPa              H2/ ppmv "); /*cabeçalho */
+
+ 
+  Serial.begin(9600);
+  sensors.begin(); /*inicia biblioteca para o sensor de temperatura*/
+  continuo=-1;  //
+  int a=0;
+}
+
+void loop() {
+  // verifica o sinal de "LIGAR" pino 8
+  LigaVal=digitalRead(Liga);
+  PumpAVal=digitalRead(PumpA);
+  if (LigaVal==1) {
+      continuo=-continuo;
+  }
+  if (continuo==1){
+     if(PumpAVal==HIGH){
+        sensores();
+     } else {
+      digitalWrite(PumpB, HIGH);
+      /*Serial.println("bomba de descarte ligada");*/
+      delay(100);
+      digitalWrite(PumpA, HIGH);
+      //Serial.println("bomba de alimentação ligada");
+      Serial.println("Iniciando a coleta de dados");
+      delay(3000);
+     }
+  } else {
+    if(PumpAVal==HIGH) {
+      digitalWrite(PumpA, LOW);
+      Serial.println("Desligando o sistema");
+      //Serial.println("bomba de alimentação desligada"); 
+      //Serial.println(continuo);   
+      delay(1000);
+      digitalWrite(PumpB, LOW);
+      //Serial.println("bomba de descarte ligada");
+      
+    }else{
+      Serial.print("Pressione botão para iniciar");
+      Serial.println(digitalRead(Liga));    
+      }      
+    }
+    }
+  //}
+    //Serial.print(LigaVal);
+   // temp=digitalRead(PumpA);
+    //Serial.println(temp);
+    /*if(LigaVal==LOW) {
+      digitalWrite(PumpA,HIGH);
+    } else{
+      digitalWrite(PumpA,LOW);
+      }*/
