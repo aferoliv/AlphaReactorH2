@@ -1,7 +1,5 @@
-
 import serial
 import time
-import serial.tools.list_ports
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec   # atualiza os gráficos na mesma janela
@@ -74,19 +72,11 @@ class LeituraRS:
         self.leitura()
 
 
-
     def leitura(self, nome):
 
         development = 0
         coleta_ativa=0
-        #
-        #
-        #
-        #if nome=="desligando":
-        #    plt.close('all')
-        #
-        #
-        #
+
         # coleta de dados via USB
         if (development == 0):
 
@@ -94,13 +84,6 @@ class LeituraRS:
             arduino = serial.Serial()
             # arquivo com.txt contem a porta a ser usada (texto sem aspas)
             porta = open('com.txt', 'r', encoding="utf8")
-            #
-            #  lista todas as portas: CH340 é o arduino uno
-            #
-            ports = list(serial.tools.list_ports.comports())
-            for p in ports:
-                print (p)
-            #
             Nporta = porta.readline()
             print(Nporta)
             #
@@ -113,7 +96,6 @@ class LeituraRS:
             if arduino.isOpen():
                 try:
                     print("1a linha: ",arduino.readline())
-
                 except Exception:
                     print("error open serial port: ")
                     exit()
@@ -128,19 +110,12 @@ class LeituraRS:
                 if (dado.find("Pressione")!=-1):       # 2: posição 1a ocorrência raw:"b'Pressione bot\xc3\xa3o para iniciar\r\n' 2"
                     print('PRESSIONE O BOTÃO PARA INICIAR A COLETA')
                     if (epa==0):
-                        #Tela_H2.showinfo("ATENÇÃO", "PRESSIONE O BOTÃO PARA INICIAR A COLETA")
+                        Tela_H2.showinfo("ATENÇÃO", "PRESSIONE O BOTÃO PARA INICIAR A COLETA")
                         epa=1
-                        resposta=Tela_H2.askokcancel("ATENÇÃO", "PRESSIONE O BOTÃO PARA INICIAR A COLETA")
-                        print(resposta)
-                        if resposta==False:
-                            print("aqui")
-                            print("-----coleta finalizada-----")
-                            try:
-                                arduino.close()
-                            except:
-                                pass
-
-
+                    #Tela_H2.Tela.texto1 = Tela_H2.tk.Label(self.caixa1, text='PRESSIONE ALGUMA TECLA PARA INICIAR A COLETA')
+                    #Tela_H2.Tela.texto1.grid(column=0, row=8)
+                    #Tela_H2.Tela.texto3 = Tela_H2.tk.Label(self.caixa1, text='PRESSIONE ALGUMA TECLA PARA INICIAR A COLETA')  #
+                    #Tela_H2.Tela.texto3.grid(column=0, row=7)
 
                 elif dado.find("alimenta")==11:    #b'bomba de alimenta\xc3\xa7\xc3\xa3o ligada\r\n' -1
                      coleta_ativa=1
@@ -162,16 +137,11 @@ class LeituraRS:
                 Raw_list.append(dado)
 
                 excluido="b'"
-                try:
-                    temperatura = float(Lista_Dado[0].replace(excluido,""))
-                    pressao=float(Lista_Dado[1])
-                    #remove \\r\\n' do sensor H2
-                    excluido="\\r\\n'"
-                    H2=float(Lista_Dado[3].replace(excluido,""))
-                except:
-                    temperatura =0
-                    pressao=0
-                    H2=0
+                temperatura = float(Lista_Dado[0].replace(excluido,""))
+                pressao=float(Lista_Dado[1])
+                #remove \\r\\n' do sensor H2
+                excluido="\\r\\n'"
+                H2=float(Lista_Dado[3].replace(excluido,""))
                     #
                 tempo= time.time()-tempo_inicio
                 saida_dado.append([tempo,temperatura, pressao, H2])
@@ -191,6 +161,7 @@ class LeituraRS:
                 #
                 #
                 #
+
+
                 Tela_H2.Tela.texto1 = Tela_H2.tk.Label(self.caixa1, text=dado)
                 Tela_H2.Tela.texto1.grid(column=0, row=8)
- 
